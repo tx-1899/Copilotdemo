@@ -132,9 +132,6 @@ public class LoginForm extends JFrame
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        // print the properties.getProperty("password") to the console
-        System.out.println(properties.getProperty("password"));
         
         // create a null user object
         User user = null;
