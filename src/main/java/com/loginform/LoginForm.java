@@ -3,12 +3,15 @@ package com.loginform;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileInputStream;
 import java.sql.*;
-
+import java.util.Properties;
 import javax.swing.*;
+
 
 public class LoginForm extends JFrame
 {
+    
     // create a font called mainFont that is 'Segoe print', Bold, and size 18 make it final and private
     private final Font mainFont = new Font("Segoe Print", Font.BOLD, 18);
 
@@ -115,6 +118,24 @@ public class LoginForm extends JFrame
 
     // create a method called getAuthenticatedUser that takes in a String email and a String password
     private User getAuthenticatedUser(String email, String password) {
+
+        // create a Properties object called properties
+        Properties properties = new Properties();
+        // create a FileInputStream called fis and set it to null
+        FileInputStream fis = null;
+        // create a try-catch block
+        try {
+            // set fis to a new FileInputStream with the path to the db.properties file
+            fis = new FileInputStream("src/main/resources/credentials.properties");
+            // load the properties file
+            properties.load(fis);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // print the properties.getProperty("password") to the console
+        System.out.println(properties.getProperty("password"));
+        
         // create a null user object
         User user = null;
 
@@ -123,35 +144,18 @@ public class LoginForm extends JFrame
         // create final String for USERNAME with value of 'root'
         final String USERNAME = "root";
         // create final String for PASSWORD with value of ''
-        final String PASSWORD = "";
+        final String PASSWORD = properties.getProperty("password");
 
         // create a try-catch block
         try {
-            // create a Connection called conn and set it to null
-            Connection conn = null;
+            // Create a connection object called conn and DriverManager.getconnection with DB_URL, USERNAME, and PASSWORD
+            Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+            // Create a Statement object called stmt and conn.createStatement
+            Statement stmt = conn.createStatement();
+            // Create a ResultSet object called rs and stmt.executeQuery with the query "SELECT * FROM employee_details WHERE email = '" + email + "' AND password = '" + password + "'"
+            ResultSet rs = stmt.executeQuery("SELECT * FROM employee_details WHERE email = '" + email + "' AND password = '" + password + "'");
 
-            // create a Statement called stmt and set it to null
-            Statement stmt = null;
-
-            // create a ResultSet called rs and set it to null
-            ResultSet rs = null;
-
-            // create a String called query and set it to "SELECT * FROM users WHERE email = '" + email + "' AND password = '" + password + "'"
-            String query = "SELECT * FROM users WHERE email = '" + email + "' AND password = '" + password + "'";
-
-            // create a Class.forName for com.mysql.jdbc.Driver
-            Class.forName("com.mysql.jdbc.Driver");
-
-            // create a connection to the database using DriverManager.getConnection with DB_URL, USERNAME, and PASSWORD
-            conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-
-            // create a statement using conn.createStatement
-            stmt = conn.createStatement();
-
-            // create a ResultSet called rs and set it to stmt.executeQuery(query)
-            rs = stmt.executeQuery(query);
-
-            // if rs.next() is true, create a new User object called user and set the id, email, password, phone, address, city, state, and zip from the result set
+            // if rs.next() is true, create a new User object called user and set the id, email, password, phone, address, city, state, and zip
             if (rs.next()) {
                 user = new User();
                 user.id = rs.getInt("id");
@@ -164,13 +168,17 @@ public class LoginForm extends JFrame
                 user.zip = rs.getString("zip");
             }
 
+            // close the connection, statement, and result set
+            conn.close();
+            stmt.close();
+            rs.close();
+    
         } catch (Exception e) {
             e.printStackTrace();
 
         }
-
-        return user;
-            
+        // return the user
+        return user;        
     }
     
     public static void main( String[] args )
